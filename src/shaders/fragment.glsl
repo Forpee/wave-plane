@@ -1,6 +1,7 @@
 uniform float uTime;
 uniform sampler2D uTexture;
 varying float vWave;
+uniform float uNoiseAmp;
 
 varying vec2 vUv;
 

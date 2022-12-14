@@ -1,7 +1,11 @@
 varying vec2 vUv;
 uniform float uTime;
 varying float vWave;
-
+uniform float uNoiseAmp;
+uniform float uNoiseFreq;
+uniform float uNoiseSpeed;
+uniform float uNoiseZ;
+uniform float uProg;
 
 //	Simplex 3D Noise 
 //	by Ian McEwan, Ashima Arts
@@ -84,12 +88,11 @@ void main()
     // gl_PointSize=10.*(1./-mvPosition.z);
 
     vec3 pos = position;
-    float noiseFreq = 3.5;
-    float noiseAmp = 0.15; 
-    vec3 noisePos = vec3(pos.x * noiseFreq + uTime*0.5, pos.y, pos.z);
-    pos.z += snoise(noisePos) * noiseAmp;
+    vec3 noisePos = vec3(pos.x * uNoiseFreq + uTime, pos.y, pos.z)*uNoiseSpeed*uProg;
+    pos.z += snoise(noisePos) * uNoiseAmp;
     vWave = pos.z;
-    
+    pos.z *= uNoiseZ;
+  
     gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);
     
     vUv=uv;

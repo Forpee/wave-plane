@@ -15,7 +15,38 @@ gsap.registerPlugin(ScrollTrigger);
  * Base
  */
 // Debug
+const settings = {
+    uNoiseFreq: 3.5,
+    uNoiseAmp: 0.15,
+    uNoiseSpeed: 1,
+    uNoiseZ: 10.0,
+};
+
 const gui = new dat.GUI();
+
+gui.add(settings, 'uNoiseFreq', 0, 10, 0.01).onChange((value) => {
+    planes.forEach((plane) => {
+        plane.material.uniforms.uNoiseFreq.value = value;
+    });
+});
+
+gui.add(settings, 'uNoiseAmp', 0, 1, 0.01).onChange((value) => {
+    planes.forEach((plane) => {
+        plane.material.uniforms.uNoiseAmp.value = value;
+    });
+});
+
+gui.add(settings, 'uNoiseSpeed', 0, 3, 0.1).onChange((value) => {
+    planes.forEach((plane) => {
+        plane.material.uniforms.uNoiseSpeed.value = value;
+    });
+});
+
+gui.add(settings, 'uNoiseZ', 0, 40, 0.1).onChange((value) => {
+    planes.forEach((plane) => {
+        plane.material.uniforms.uNoiseZ.value = value;
+    });
+});
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl');
@@ -27,7 +58,7 @@ const scene = new THREE.Scene();
  * Test mesh
  */
 // Geometry
-const geometry = new THREE.PlaneBufferGeometry(0.4, 0.6, 32, 32);
+const geometry = new THREE.PlaneBufferGeometry(1, 1, 32, 32);
 
 // Loader
 const loader = new THREE.TextureLoader();
@@ -37,6 +68,8 @@ const material = new THREE.ShaderMaterial({
     uniforms: {
         uTime: { value: 0 },
         uTexture: { value: loader.load('img-01.jpg') },
+        uNoiseFreq: { value: settings.uNoiseFreq },
+        uNoiseAmp: { value: settings.uNoiseAmp },
     },
     vertexShader: vertexShader,
     fragmentShader: fragmentShader,
@@ -76,8 +109,8 @@ window.addEventListener('resize', () => {
 // const camera = new THREE.OrthographicCamera(-1/2, 1/2, 1/2, -1/2, 0.1, 100)
 
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-camera.position.set(0, 0, 1);
+const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100);
+camera.position.set(0, 0, 50);
 scene.add(camera);
 
 // // Controls
@@ -176,6 +209,10 @@ class Plane extends GlObject {
             uTexture: { value: 0 },
             uTime: { value: 0 },
             uProg: { value: 0 },
+            uNoiseAmp: { value: settings.uNoiseAmp },
+            uNoiseFreq: { value: settings.uNoiseFreq },
+            uNoiseSpeed: { value: settings.uNoiseSpeed },
+            uNoiseZ: { value: settings.uNoiseZ },
             uIndex: { value: index },
         };
 
@@ -204,6 +241,7 @@ class Plane extends GlObject {
     }
 
     mouseEnter() {
+
         this.el.addEventListener('mouseenter', () => {
             gsap.to(this.material.uniforms.uProg, {
                 // duration: 1,
@@ -214,13 +252,13 @@ class Plane extends GlObject {
     }
 
     mouseLeave() {
-        this.el.addEventListener('mouseleave', () => {
-            gsap.to(this.material.uniforms.uProg, {
-                // duration: 1,
-                value: 0,
-                ease: 'power.inOut',
-            });
+        // this.el.addEventListener('mouseleave', () => {
+        gsap.to(this.material.uniforms.uProg, {
+            // duration: 1,
+            value: 0,
+            ease: 'power.inOut',
         });
+        // });
     }
 }
 const planes = [];
@@ -245,19 +283,57 @@ document.addEventListener('wheel', (e) => {
     const y = e.deltaY;
 
     gsap.to(currentMap, {
-        duration: 0.5,
+        duration: 0.4,
         current: currentMap.current + y,
         ease: 'power.inOut',
         onUpdate: () => {
-            console.log(currentMap.current);
             for (let i = 0; i < planes.length; i++) {
                 const plane = planes[i];
+                // clamp so currentMap.current doesn't go below 0
+
+                currentMap.current = Math.max(0, currentMap.current);
+
                 plane.updatePosition(currentMap.current);
             }
         }
     });
 
 });
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+window.addEventListener('pointermove', onPointerMove);
+
+function onPointerMove(event) {
+
+    // calculate pointer position in normalized device coordinates
+    // (-1 to +1) for both components
+
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, camera);
+
+    // calculate objects intersecting the picking ray
+    const intersects = raycaster.intersectObjects(scene.children);
+    let recentPlane = null;
+    if (intersects.length > 0) {
+        const intersect = intersects[0];
+        // console.log(intersect);
+        recentPlane = intersect.object.parent;
+        recentPlane.material.uniforms.uProg.value = 1;
+        // plane.mouseEnter();
+
+    } else {
+        planes.forEach(plane => {
+            plane.material.uniforms.uProg.value = 0;
+
+        });
+    }
+
+    // Stop animation when mouse leaves plane
+
+}
 
 const tick = () => {
     // Get elapsedtime
