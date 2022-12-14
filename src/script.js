@@ -5,9 +5,12 @@ import * as dat from 'dat.gui';
 import vertexShader from './shaders/vertex.glsl';
 import fragmentShader from './shaders/fragment.glsl';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { preloadImages } from './utils/preload';
 import Smooth from './Smooth';
 import Events from './Events/Events';
+
+gsap.registerPlugin(ScrollTrigger);
 /**
  * Base
  */
@@ -233,18 +236,28 @@ preloadImages().then(() => {
     const smooth = new Smooth();
 });
 
-let current = 0;
+const obj = {
+    current: 0
+};
 
 document.addEventListener('wheel', (e) => {
 
     const y = e.deltaY;
-    current += y;
-    console.log(y);
 
-    for (let i = 0; i < planes.length; i++) {
-        const plane = planes[i];
-        plane.updatePosition(current);
-    }
+    // update current smoothly with gsap
+    gsap.to(obj, {
+        duration: 0.5,
+        current: obj.current + y,
+        ease: 'power.inOut',
+        onUpdate: () => {
+            // console.log(current);
+            for (let i = 0; i < planes.length; i++) {
+                const plane = planes[i];
+                plane.updatePosition(obj.current);
+            }
+        }
+    });
+
 });
 
 const tick = () => {
@@ -258,7 +271,7 @@ const tick = () => {
     for (let i = 0; i < planes.length; i++) {
         const plane = planes[i];
         // plane.updatePosition(current);
-        // console.log(pl   ne);
+        // console.log(current);
         plane.updateTime(elapsedTime);
     }
 
