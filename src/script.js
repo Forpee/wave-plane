@@ -319,11 +319,8 @@ function onPointerMove(event) {
     let recentPlane = null;
     if (intersects.length > 0) {
         const intersect = intersects[0];
-        // console.log(intersect);
         recentPlane = intersect.object.parent;
         recentPlane.material.uniforms.uProg.value = 1;
-        // plane.mouseEnter();
-
     } else {
         planes.forEach(plane => {
             plane.material.uniforms.uProg.value = 0;
