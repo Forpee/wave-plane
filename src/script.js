@@ -236,7 +236,7 @@ preloadImages().then(() => {
     const smooth = new Smooth();
 });
 
-const obj = {
+const currentMap = {
     current: 0
 };
 
@@ -244,16 +244,15 @@ document.addEventListener('wheel', (e) => {
 
     const y = e.deltaY;
 
-    // update current smoothly with gsap
-    gsap.to(obj, {
+    gsap.to(currentMap, {
         duration: 0.5,
-        current: obj.current + y,
+        current: currentMap.current + y,
         ease: 'power.inOut',
         onUpdate: () => {
-            // console.log(current);
+            console.log(currentMap.current);
             for (let i = 0; i < planes.length; i++) {
                 const plane = planes[i];
-                plane.updatePosition(obj.current);
+                plane.updatePosition(currentMap.current);
             }
         }
     });
