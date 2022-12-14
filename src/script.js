@@ -260,17 +260,11 @@ document.addEventListener('wheel', (e) => {
 });
 
 const tick = () => {
-    // console.log(prop);
-    // Update controls
-    // controls.update();
-
     // Get elapsedtime
     const elapsedTime = clock.getElapsedTime();
 
     for (let i = 0; i < planes.length; i++) {
         const plane = planes[i];
-        // plane.updatePosition(current);
-        // console.log(current);
         plane.updateTime(elapsedTime);
     }
 
@@ -283,12 +277,5 @@ const tick = () => {
     // Call tick again on the next frame
     window.requestAnimationFrame(tick);
 };
-
-const run = (props) => {
-    console.log(props);
-};
-
-// Events.on('tick', tick);
-// Events.on('resize', resize);
 
 tick();
